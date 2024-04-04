@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Video</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #2a2a2a;
+            margin-top: 50px;
+        }
+
+        .form-control {
+            background-color: #3a3a3a;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .form-label {
+            color: #fff;
+        }
+
+        #preview {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            color: #fff;
+        }
+
+        .modal-header {
+            border-bottom: none;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            border-top: none;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .btn-close {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h2 class="mb-4 text-center">Add Video</h2>
+            <form id="addVideoForm">
+                <div class="mb-3">
+                    <label for="videoName" class="form-label">Name:</label>
+                    <input type="text" class="form-control" id="videoName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="videoCategory" class="form-label">Category:</label>
+                    <input type="text" class="form-control" id="videoCategory" required>
+                </div>
+                <div class="mb-3">
+                    <label for="youtubeUrl" class="form-label">YouTube Url:</label>
+                    <input type="text" class="form-control" id="youtubeUrl" required>
+                    <iframe id="preview" src="" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <div class="mb-3">
+                    <label for="secret" class="form-label">Secret:</label>
+                    <input type="password" class="form-control" id="secret" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Video added successfully!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Error adding video! Please check the input and try again.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('youtubeUrl').addEventListener('input', function(event) {
+            const youtubeUrl = event.target.value;
+            const videoId = getYouTubeVideoId(youtubeUrl);
+            const previewUrl = `https://www.youtube.com/embed/${videoId}`;
+            document.getElementById('preview').src = previewUrl;
+        });
+
+        document.getElementById('addVideoForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const videoName = document.getElementById('videoName').value;
+    const videoCategory = document.getElementById('videoCategory').value;
+    const youtubeUrl = document.getElementById('youtubeUrl').value;
+    const secret = document.getElementById('secret').value;
+
+    if (!videoName || !videoCategory || !youtubeUrl || !secret) {
+        console.error('Please fill in all required fields');
+        return;
+    }
+
+    const videoId = getYouTubeVideoId(youtubeUrl);
+    if (!videoId) {
+        console.error('Invalid YouTube URL');
+        return;
+    }
+
+    const previewUrl = `https://www.youtube.com/embed/${videoId}`;
+    document.getElementById('preview').src = previewUrl;
+
+    fetch(`/api/addVideo?title=${videoName}&url=${youtubeUrl}&category=${videoCategory}&secret=${secret}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            var myModal = new bootstrap.Modal(document.getElementById('successModal'));
+            myModal.show();
+        } else {
+            var myModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            myModal.show();
+        }
+    })
+    .catch(error => console.error('Error adding video:', error));
+});
+
+function getYouTubeVideoId(url) {
+    const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+      }
+    </script>
+</body>
+</html>

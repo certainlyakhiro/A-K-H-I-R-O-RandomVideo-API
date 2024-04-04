@@ -12,7 +12,7 @@ channel = "stable-23_05"
 language = "nodejs"
 
 [deployment]
-run = ["node", "index.js"]
+run = ["node", "index.mjs"]
 deploymentTarget = "cloudrun"
 ignorePorts = false
 
